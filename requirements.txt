@@ -4,3 +4,5 @@ isort
 requests
 LXML
 beautifulsoup4
+pandas
+Scrapy
