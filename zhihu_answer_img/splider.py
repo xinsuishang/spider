@@ -2,6 +2,7 @@ import os
 import re
 
 from bs4 import BeautifulSoup
+import pandas
 import requests
 
 
@@ -32,7 +33,7 @@ os.chdir(path)
 for i in range(len(img_list)):
     img_list[i] = 'https://' + img_list[i] + '_r.jpg'
     save(img_list[i])
-
-
+# csv_path = os.path.join(path, 'img_url.csv')
+df = pandas.DataFrame.from_dict(img_list).to_csv('img_url.csv')
 # soup = BeautifulSoup(start_html.text, 'lxml')
 # img_list = soup.find_all('img')
