@@ -6,5 +6,6 @@ LXML
 beautifulsoup4
 pandas
 Scrapy
+pymongo
 selenium
 pyquery

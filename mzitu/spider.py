@@ -62,7 +62,7 @@ class mzitu():
         f.close()
 
     def mkdir(self, path): 
-        abspath = os.path.join('/Users/admin/Desktop/splider/splider/mzitu/img_test', path)
+        abspath = os.path.join('/Users/admin/Desktop/spider/spider/mzitu/img_test', path)
         path = path.strip()
         is_exists = os.path.exists(abspath)
         if not is_exists:
