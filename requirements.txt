@@ -6,3 +6,5 @@ LXML
 beautifulsoup4
 pandas
 Scrapy
+selenium
+pyquery
