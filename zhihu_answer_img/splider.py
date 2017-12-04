@@ -1,15 +1,13 @@
 import os
 import re
 
-from bs4 import BeautifulSoup
 import pandas
 import requests
 
-
 headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36',
-        'authorization': 'oauth c3cef7c66a1843f8b3a9e6a1e3160e20',
-    }
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36',
+    'authorization': 'oauth c3cef7c66a1843f8b3a9e6a1e3160e20',
+}
 
 
 def save(img_url):  # 保存图片
