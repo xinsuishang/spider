@@ -1,59 +1,46 @@
-from bs4 import BeautifulSoup
+import multiprocessing
 import os
+import threading
+import time
+
+from bs4 import BeautifulSoup
+
 from download import request
-from pymongo import MongoClient
-from config import *
+from MongoQueue import MogoQueue
 
-client = MongoClient(MONGO_URL, connect=False)
-db = client[MONGO_DB]
+crawl_queue = MogoQueue('mzitu', 'crawl_queue')  # 所有的主题url
+SLEEP_TIME = 1
 
 
-class mzitu():
+def mzitu_crawler(max_threads=10):
+    img_queue = MogoQueue('mzitu', 'img_queue')  # 这个是图片实际URL的队列
 
-    def __init__(self):
-        self.collection = db[MONGO_TABLE]
-        self.title = ''  # 用来保存页面主题
-        self.url = ''  # 用来保存页面地址
-        self.img_urls = []  # 初始化列表保存图片地址
-
-    def all_url(self, url):
-        html = request.get(url, 3)
-        all_a = BeautifulSoup(html.text, 'lxml').find('div', class_='all').find_all('a')
-        for a in all_a:
-            title = a.get_text()
-            self.title = title
-            print(u'开始保存：', title)
-            path = str(title).replace("?", '_')
-            self.mkdir(path)
-            href = a['href']
-            self.url = href
-            if self.collection.find_one({'主题url': href}):  # 判断这个主题是否已经在数据库中、不在就运行else下的内容，在则忽略。
-                print(u'这个页面已经爬取过了')
+    def pageurl_crawler():
+        while True:
+            try:
+                url = crawl_queue.pop()
+                print(url)
+            except KeyError:
+                print('队列没有数据')
+                break
             else:
-                self.html(href)
+                img_urls = []
+                html = request.get(url, 3).text
+                title = crawl_queue.pop_title(url)
+                path = str(title).replace("?", '_')
+                mkdir(path)
+                max_span = BeautifulSoup(html, 'lxml').find('div', class_='pagenavi').find_all('span')[-2].get_text()
+                for page in range(1, int(max_span) + 1):
+                    page_url = url + '/' + str(page)
+                    img_html = request.get(page_url, 3)
+                    img_url = BeautifulSoup(img_html.text, 'lxml').find('div', class_='main-image').find('img')['src']
+                    img_urls.append(img_url)
+                    save(img_url)
+                crawl_queue.complete(url)  # 设置为完成状态
+                img_queue.push_imgurl(title, url, img_urls)
+                print('插入数据库成功')
 
-    def html(self, href):
-        html = request.get(href, 3)
-        max_span = BeautifulSoup(html.text, 'lxml').find_all('span')[10].get_text()
-        page_count = 0
-        self.img_urls = []
-        for page in range(1, int(max_span) + 1):
-            page_url = href + '/' + str(page)
-            page_count += 1
-            self.img(page_url, max_span, page_count)
-
-    def img(self, page_url, max_span, page_count):
-        img_html = request.get(page_url, 3)
-        img_url = BeautifulSoup(img_html.text, 'lxml').find('div', class_='main-image').find('img')['src']
-        self.img_urls.append(img_url)
-        self.save(img_url)
-        if int(max_span) == page_count:
-            post = {'标题': self.title,
-                    '主题url': self.url,
-                    '图片地址': self.img_urls}
-            self.save_to_mongo(post)
-
-    def save(self, img_url):
+    def save(img_url):
         name = img_url[-9:-4]
         print(u'开始保存：', img_url)
         img = request.get(img_url, 3)
@@ -61,7 +48,7 @@ class mzitu():
         f.write(img.content)
         f.close()
 
-    def mkdir(self, path): 
+    def mkdir(path):
         abspath = os.path.join('/Users/admin/Desktop/spider/spider/mzitu/img_test', path)
         path = path.strip()
         is_exists = os.path.exists(abspath)
@@ -75,12 +62,48 @@ class mzitu():
             os.chdir(abspath)
             return False
 
-    def save_to_mongo(self, result):
-        if db[MONGO_TABLE].insert(result):
-            print('Successfully Saved to Mongo', result['标题'])
-            return True
-        return False
+    threads = []
+    while threads or crawl_queue:
+        """
+        这儿crawl_queue用上了，就是我们__bool__函数的作用，为真则代表我们MongoDB队列里面还有数据
+        threads 或者 crawl_queue为真都代表我们还没下载完成，程序就会继续执行
+        """
+        for thread in threads:
+            if not thread.is_alive():  # is_alive是判断是否为空,不是空则在队列中删掉
+                threads.remove(thread)
+        while len(threads) < max_threads or crawl_queue.peek():  # 线程池中的线程少于max_threads 或者 crawl_qeue时
+            thread = threading.Thread(target=pageurl_crawler)  # 创建线程
+            thread.setDaemon(True)  # 设置守护线程
+            thread.start()  # 启动线程
+            threads.append(thread)  # 添加进线程队列
+        time.sleep(SLEEP_TIME)
 
 
-Mzitu = mzitu()  # 实例化
-Mzitu.all_url('http://www.mzitu.com/all')  # 入口
+def process_crawler():
+    process = []
+    num_cpus = multiprocessing.cpu_count()
+    print('将会启动进程数为：', num_cpus)
+    for i in range(num_cpus):
+        p = multiprocessing.Process(target=mzitu_crawler)  # 创建进程
+        p.start()  # 启动进程
+        process.append(p)  # 添加进进程队列
+    for p in process:
+        p.join()  # 等待进程队列里面的进程结束
+
+
+def all_url(url):
+    html = request.get(url, 3)
+    all_a = BeautifulSoup(html.text, 'lxml').find('div', class_='all').find_all('a')
+    for a in all_a:
+        title = a.get_text()
+        href = a['href']
+        crawl_queue.push(href, title)
+
+
+if __name__ == '__main__':
+    """
+    首先释放all_url，获取到要爬取的所有主题链接
+    然后使用process_crawler()，开始爬取图片
+    """
+    # all_url('http://www.mzitu.com/all')  # 入口
+    process_crawler()

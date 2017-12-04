@@ -1,16 +1,17 @@
-import requests
-import re
 import random
+import re
 import time
+
+import requests
 
 
 class download():
 
     def __init__(self):
 
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
+        header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36'}
         ip_url = 'http://www.xicidaili.com/nn/'
-        response = requests.get(ip_url, headers=headers)
+        response = requests.get(ip_url, headers=header)
         self.iplist = re.findall(r'\d+\.\d+\.\d+\.\d+', response.text, re.S)
 
         self.user_agent_list = [
@@ -37,17 +38,18 @@ class download():
     def get(self, url, timeout, proxy=None, num_retries=6):
         UA = random.choice(self.user_agent_list)
         headers = {'User-Agent': UA}
+        headers['referer'] = url
 
-        if proxy == None: ##当代理为空时，不使用代理获取response
+        if proxy is None:  # 当代理为空时，不使用代理获取response
             try:
                 return requests.get(url, headers=headers, timeout=timeout)
             except:
 
-                if num_retries > 0: ##num_retries 限定重试次数
-                    time.sleep(10) ##延迟十秒
+                if num_retries > 0:  # num_retries 限定重试次数
+                    time.sleep(10)  # 延迟十秒
                     print(u'获取网页出错，10S后将获取倒数第：', num_retries, u'次')
                     print(url)
-                    return self.get(url, timeout, num_retries-1)  ##调用自身 并将次数减1
+                    return self.get(url, timeout, num_retries - 1)  # 调用自身,并将次数减1
                 else:
                     print(u'开始使用代理')
                     time.sleep(10)
@@ -58,8 +60,8 @@ class download():
         else:
             try:
                 IP = ''.join(str(random.choice(self.iplist)).strip())
-                proxy = {'http': IP} ##构造成一个代理
-                return requests.get(url, headers=headers, proxies=proxy, timeout=timeout) ##使用代理获取response
+                proxy = {'http': IP}  # 构造成一个代理
+                return requests.get(url, headers=headers, proxies=proxy, timeout=timeout)  # 使用代理获取response
             except:
 
                 if num_retries > 0:
@@ -72,5 +74,6 @@ class download():
                 else:
                     print(u'代理也不好使了！取消代理')
                     return self.get(url, 3)
+
 
 request = download()
