@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 
 from pymongo import MongoClient, errors
 
+from log import Log
+
 
 class MogoQueue():
 
@@ -10,7 +12,7 @@ class MogoQueue():
     COMPLETE = 3  # 下载完成状态
 
     def __init__(self, db, collection, timeout=300):  # 初始mongodb连接
-        self.client = MongoClient()
+        self.client = MongoClient('localhost', connect=False)
         self.Client = self.client[db]
         self.db = self.Client[collection]
         self.timeout = timeout
@@ -29,17 +31,16 @@ class MogoQueue():
     def push(self, url, title):  # 这个函数用来添加新的URL进队列
         try:
             self.db.insert({'_id': url, 'status': self.OUTSTANDING, '主题': title})
-            print(url, '插入队列成功')
+            Log.info('mongo', '插入队列成功 title=%s url=%s' % (title, url))
         except errors.DuplicateKeyError as e:  # 报错则代表已经存在于队列之中了
-            print(url, '已经存在于队列中了')
-            pass
+            Log.info('mongo', '%s已经存在于队列中了' % url)
 
     def push_imgurl(self, title, url, img_url):
         try:
             self.db.insert({'_id': title, 'statu': self.OUTSTANDING, 'url': url, 'img_url': img_url})
-            print('图片地址插入成功')
+            Log.info('mongo', '%s图片地址插入成功' % url)
         except errors.DuplicateKeyError as e:
-            print('地址已经存在了')
+            Log.info('mongo', '%s地址已经存在了' % url)
             pass
 
     def pop(self):
@@ -84,7 +85,7 @@ class MogoQueue():
             update={'$set': {'status': self.OUTSTANDING}}
         )
         if record:
-            print('重置URL状态', record['_id'])
+            Log.info('mongo', '重置URL状态 %s' % record['_id'])
 
     def clear(self):
         """这个函数只有第一次才调用、后续不要调用、因为这是删库啊！"""

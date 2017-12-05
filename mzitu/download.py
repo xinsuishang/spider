@@ -4,6 +4,8 @@ import time
 
 import requests
 
+from log import Log
+
 
 class download():
 
@@ -47,11 +49,11 @@ class download():
 
                 if num_retries > 0:  # num_retries 限定重试次数
                     time.sleep(10)  # 延迟十秒
-                    print(u'获取网页出错，10S后将获取倒数第：', num_retries, u'次')
-                    print(url)
+                    Log.info('downs', '获取网页出错，10S后将获取倒数第： %s次' % num_retries)
+                    Log.info('downs', url)
                     return self.get(url, timeout, num_retries - 1)  # 调用自身,并将次数减1
                 else:
-                    print(u'开始使用代理')
+                    Log.info('downs', '开始使用代理')
                     time.sleep(10)
                     IP = ''.join(str(random.choice(self.iplist)).strip())
                     proxy = {'http': IP}
@@ -68,11 +70,11 @@ class download():
                     time.sleep(10)
                     IP = ''.join(str(random.choice(self.iplist)).strip())
                     proxy = {'http': IP}
-                    print(u'正在更换代理，10S后将重新获取倒数第', num_retries, u'次')
-                    print(u'当前代理是：', proxy)
+                    Log.info('downs', '正在更换代理，10S后将重新获取倒数第 %s次' % num_retries)
+                    Log.info('downs', '当前代理是：%s' % proxy)
                     return self.get(url, timeout, proxy, num_retries - 1)
                 else:
-                    print(u'代理也不好使了！取消代理')
+                    Log.info('downs', '代理也不好使了！取消代理')
                     return self.get(url, 3)
 
 

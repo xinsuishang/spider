@@ -5,7 +5,9 @@ import time
 
 from bs4 import BeautifulSoup
 
+from config import ROOT
 from download import request
+from log import Log
 from MongoQueue import MogoQueue
 
 crawl_queue = MogoQueue('mzitu', 'crawl_queue')  # 所有的主题url
@@ -19,9 +21,9 @@ def mzitu_crawler(max_threads=10):
         while True:
             try:
                 url = crawl_queue.pop()
-                print(url)
+                Log.info('spider', url)
             except KeyError:
-                print('队列没有数据')
+                Log.info('spider', '队列没有数据')
                 break
             else:
                 img_urls = []
@@ -29,36 +31,42 @@ def mzitu_crawler(max_threads=10):
                 title = crawl_queue.pop_title(url)
                 path = str(title).replace("?", '_')
                 mkdir(path)
-                max_span = BeautifulSoup(html, 'lxml').find('div', class_='pagenavi').find_all('span')[-2].get_text()
-                for page in range(1, int(max_span) + 1):
-                    page_url = url + '/' + str(page)
-                    img_html = request.get(page_url, 3)
-                    img_url = BeautifulSoup(img_html.text, 'lxml').find('div', class_='main-image').find('img')['src']
-                    img_urls.append(img_url)
-                    save(img_url)
-                crawl_queue.complete(url)  # 设置为完成状态
-                img_queue.push_imgurl(title, url, img_urls)
-                print('插入数据库成功')
+                try:
+                    max_span = BeautifulSoup(html, 'lxml').find('div', class_='pagenavi').find_all('span')[-2].get_text()
+                    for page in range(1, int(max_span) + 1):
+                        page_url = url + '/' + str(page)
+                        img_html = request.get(page_url, 3)
+                    try:
+                        img_url = BeautifulSoup(img_html.text, 'lxml').find('div', class_='main-image').find('img')['src']
+                        img_urls.append(img_url)
+                        save(img_url)
+                    except AttributeError:
+                        pass
+                    crawl_queue.complete(url)  # 设置为完成状态
+                    img_queue.push_imgurl(title, url, img_urls)
+                    Log.info('spider', '插入数据库成功')
+                except AttributeError:
+                    pass
 
     def save(img_url):
         name = img_url[-9:-4]
-        print(u'开始保存：', img_url)
+        Log.info('spider', u'开始保存：%s' % img_url)
         img = request.get(img_url, 3)
         f = open(name + '.jpg', 'ab')
         f.write(img.content)
         f.close()
 
     def mkdir(path):
-        abspath = os.path.join('/Users/admin/Desktop/spider/spider/mzitu/img_test', path)
+        abspath = os.path.join(ROOT, 'img_test', path)
         path = path.strip()
         is_exists = os.path.exists(abspath)
         if not is_exists:
-            print(u'建了一个名字叫做', path, u'的文件夹！')
+            Log.info('spider', u'建了一个名字叫做%s的文件夹！' % path)
             os.makedirs(abspath)
             os.chdir(abspath)
             return True
         else:
-            print(u'名字叫做', path, u'的文件夹已经存在了！')
+            Log.info('spider', u'名字叫做%s的文件夹已经存在了！' % path)
             os.chdir(abspath)
             return False
 
@@ -82,7 +90,7 @@ def mzitu_crawler(max_threads=10):
 def process_crawler():
     process = []
     num_cpus = multiprocessing.cpu_count()
-    print('将会启动进程数为：', num_cpus)
+    Log.info('spider', '启动进程数: %d' % num_cpus)
     for i in range(num_cpus):
         p = multiprocessing.Process(target=mzitu_crawler)  # 创建进程
         p.start()  # 启动进程
@@ -97,6 +105,7 @@ def all_url(url):
     for a in all_a:
         title = a.get_text()
         href = a['href']
+        # Log.info('spider', '插入成功 title=%s href=%s' % (title, href))
         crawl_queue.push(href, title)
 
 
