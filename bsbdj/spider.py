@@ -33,7 +33,12 @@ class Bsbdj(object):
 
     def getOne(self, page_now):
         self.loadStories()
-        stories = self.stories[0]  # 预加载
+        try:
+            stories = self.stories[0]  # 预加载，全部加载完了
+        except IndexError:
+            print('全看完了，没有更多的段子了，再见')
+            self.go = False
+            return 
         del self.stories[0]  # 防止内存爆掉 用完销毁
         if stories is None:
             self.go = False
