@@ -9,3 +9,4 @@ Scrapy
 pymongo
 selenium
 pyquery
+fake_useragent
