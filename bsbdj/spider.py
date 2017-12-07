@@ -3,16 +3,55 @@ import re
 import download
 
 
-def start(url):
-    response = download.request.get(url, 3)
-    pattern = re.compile('<div.*?j-list-user">.*?class="u-user-name".*?>(.*?)<.*?fr">(.*?)<.*?list-c">.*?href.*?">(.*?)<', re.S)
-    items = re.findall(pattern, response.text)
-    for item in items:
-        print('%s %s \n%s' % (item[0], item[1], item[2].strip()))
+class Bsbdj(object):
+    def __init__(self):
+        self.pageIndex = 1
+        self.stories = []
+        self.go = True
+
+    def getPage(self, pageIndex):
+        url = 'http://www.budejie.com/text/' + str(pageIndex)
+        response = download.request.get(url, 3)
+        if response.status_code == 200:
+            return response.text
+        else:
+            print('请求第 %d 页错误' % pageIndex)
+            return None
+    
+    def getItems(self, pageIndex):
+        page_code = self.getPage(pageIndex)
+        if page_code:
+            pattern = re.compile('<div.*?j-list-user">.*?class="u-user-name".*?>(.*?)<.*?fr">(.*?)<.*?list-c">.*?href.*?">(.*?)<', re.S)
+            items = re.findall(pattern, page_code)
+            return items
+        return None
+
+    def loadStories(self):
+        if self.getItems(self.pageIndex):
+            self.stories.append(self.getItems(self.pageIndex))
+            self.pageIndex += 1
+
+    def getOne(self, page_now):
+        self.loadStories()
+        stories = self.stories[0]  # 预加载
+        del self.stories[0]  # 防止内存爆掉 用完销毁
+        if stories is None:
+            self.go = False
+            return
+        for story in stories:
+            print('第%d页: %s %s \n%s' % (page_now, story[0], story[1], story[2].strip()))
+            get_input = input('Enter键继续，Q退出\n')
+            if get_input == 'Q':
+                self.go = False
+                return
+
+    def start(self):
+        self.loadStories()
+        page_now = 1
+        while self.go:
+            self.getOne(page_now)
+            page_now += 1
 
 
 if __name__ == '__main__':
-    for page in range(1,51):  #  百思不得姐的text页面只显示到50页
-        url = 'http://www.budejie.com/text/' + str(page)
-        start(url)
-    
+    Bsbdj().start()
