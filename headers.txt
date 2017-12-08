@@ -1,0 +1,7 @@
+accept
+accept-encoding
+accept-encoding
+accept-language
+cookie
+Host
+user-agent
