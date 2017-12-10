@@ -1,10 +1,12 @@
 import json
+import os
 
 from download import request
 from config import *
 
 
 comment_url = ADDRESS
+path = os.path.join(ROOT, FILE_NAME)
 if int(SCORE) > 5 or SCORE == 4:
     SCORE = '0'  # 期望获取评论类型为图片或不存在时，重制为获取所有
 
@@ -39,12 +41,11 @@ class JdComment(object):
         data = self.next_page
         if data is None:
             return None
-        print('这是第 %d 页' % (self.page+1))
         self.next_page = self.get_next_page()
         count = 0
         while True:
             try:
-                print(data['comments'][count]['content'])
+                self.save(data['comments'][count]['content'])
             except IndexError:
                 break
             count += 1
@@ -59,8 +60,15 @@ class JdComment(object):
             return None
         return data
 
-    def save(self):
-        pass 
+    def mkdir(self):
+        if os.path.exists(ROOT):
+            return None
+        os.mkdir(ROOT)
+
+    def save(self, comment):
+        with open(path, 'a') as f:
+            comment += '\n'
+            f.write(comment)
 
     def start(self):
         self.next_page = self.get_next_page(-1)

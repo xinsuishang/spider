@@ -14,3 +14,6 @@ SORTTYPE = '5'  # 推荐排序
 # SORTTYPE = '6'  # 时间排序
 
 PAGESIZE = '10'  # 每页评论数,最大为10
+
+ROOT = '/Users/admin/Desktop/spider/spider/jd_comment'
+FILE_NAME = 'comment.txt'
