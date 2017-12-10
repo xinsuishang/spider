@@ -10,3 +10,9 @@ pymongo
 selenium
 pyquery
 fake_useragent
+wordcloud
+matplotlib
+numpy
+snownlp
+jupyter
+jieba
