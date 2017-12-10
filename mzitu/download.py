@@ -53,7 +53,7 @@ class download():
                     time.sleep(10)  # 延迟十秒
                     Log.info('downs', '获取网页出错，10S后将获取倒数第： %s次' % num_retries)
                     Log.info('downs', url)
-                    return self.get(url, timeout, num_retries - 1)  # 调用自身,并将次数减1
+                    return self.get(url, timeout, num_retries=num_retries-1)  # 调用自身,并将次数减1
                 else:
                     Log.info('downs', '开始使用代理')
                     time.sleep(10)
@@ -63,8 +63,6 @@ class download():
 
         else:
             try:
-                IP = ''.join(str(random.choice(self.iplist)).strip())
-                proxy = {'http': IP}  # 构造成一个代理
                 return requests.get(url, headers=headers, proxies=proxy, timeout=timeout)  # 使用代理获取response
             except:
 
@@ -74,7 +72,7 @@ class download():
                     proxy = {'http': IP}
                     Log.info('downs', '正在更换代理，10S后将重新获取倒数第 %s次' % num_retries)
                     Log.info('downs', '当前代理是：%s' % proxy)
-                    return self.get(url, timeout, proxy, num_retries - 1)
+                    return self.get(url, timeout, proxy, num_retries-1)
                 else:
                     Log.info('downs', '代理也不好使了！取消代理')
                     return self.get(url, 3)
