@@ -1,6 +1,5 @@
-from snownlp import SnowNLP
 import numpy
-
+from snownlp import SnowNLP
 
 data = []
 filename = 'comment.txt'

@@ -17,7 +17,7 @@ class Bsbdj(object):
         else:
             print('请求第 %d 页错误' % pageIndex)
             return None
-    
+
     def getItems(self, pageIndex):
         page_code = self.getPage(pageIndex)
         if page_code:
@@ -38,7 +38,7 @@ class Bsbdj(object):
         except IndexError:
             print('全看完了，没有更多的段子了，再见')
             self.go = False
-            return 
+            return
         del self.stories[0]  # 防止内存爆掉 用完销毁
         if stories is None:
             self.go = False

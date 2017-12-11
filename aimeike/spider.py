@@ -1,6 +1,5 @@
-from bs4 import BeautifulSoup
 import requests
-
+from bs4 import BeautifulSoup
 
 url = 'https://aimeike.tv/category'
 response = requests.get(url)
@@ -15,4 +14,3 @@ for source in source_list:
         'text': source.find('p').get_text(),
     }
     target.append(data)
-

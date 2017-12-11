@@ -1,9 +1,8 @@
 import json
 import os
 
-from download import request
 from config import *
-
+from download import request
 
 comment_url = ADDRESS
 path = os.path.join(ROOT, FILE_NAME)
@@ -18,19 +17,19 @@ if int(PAGESIZE) > 10:
 
 
 class JdComment(object):
+
     def __init__(self):
         self.page = 0  # paga是从0开始的
         self.url = comment_url
         self.next_page = None
         self.params = {
-            # 'callback': 'fetchJSON_comment98vv164', 
             'productId': PRODUCTID,
             'score': SCORE,
             'sortType': SORTTYPE,
             'page': 50,
             'pageSize': PAGESIZE,
             'isShadowSku': '0',  # 用处未知,不加好像也没有影响
-            'fold':'1',  # 用处未知,不加好像也没有影响
+            'fold': '1',  # 用处未知,不加好像也没有影响
         }
 
     def get_response(self):

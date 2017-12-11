@@ -14,9 +14,9 @@ class Log():
             pass
         path = os.path.join(path, filename + '.log')
         logging.basicConfig(level=logging.INFO,
-                            format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s', 
+                            format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                             filename=path)
-        logging.info("%s : %s" %(filename, message))
+        logging.info("%s : %s" % (filename, message))
 
 
 if __name__ == "__main__":

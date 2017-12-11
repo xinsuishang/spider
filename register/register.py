@@ -9,12 +9,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from config import *
 
-
 browser = webdriver.Chrome(service_args=SERVICE_ARGS)
 # browser = webdriver.PhantomJS(service_args=SERVICE_ARGS)
 wait = WebDriverWait(browser, 5)
 browser.set_window_size(1400, 900)
 path = os.path.join(ROOT, FILE_NAME)
+
 
 def register(identity, time=5):
     if time == 0:
@@ -51,15 +51,10 @@ def register(identity, time=5):
         )
         input.send_keys(identity)
         print('再次输入密码完成')
-        # protocol = wait.until(
-            # EC.element_selection_state_to_be((By.CSS_SELECTOR,'#regProtocol'), True)
-        # )
+
         protocol = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR,'#regProtocol'))
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#regProtocol'))
         )
-        # protocol = wait.until(
-            # EC.element_to_be_selected(protocol, True)
-        # )
         protocol.click()
         print('已同意协议')
         submit = wait.until(
@@ -72,24 +67,29 @@ def register(identity, time=5):
         time -= 1
         register(identity, time)
 
+
 def random_str():
     return ''.join(random.choice(RD_STR) for i in range(12))
+
 
 def mkdir():
     if os.path.exists(ROOT):
         return None
     os.mkdir(ROOT)
 
+
 def save_to_text(identity):
     with open(path, 'a') as f:
         identity += '\n'
         f.write(identity)
+
 
 def main():
     mkdir()
     for i in range(300):
         register(random_str())
     browser.close()
+
 
 if __name__ == '__main__':
     main()
