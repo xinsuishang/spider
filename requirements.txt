@@ -16,3 +16,4 @@ numpy
 snownlp
 jupyter
 jieba
+rsa
